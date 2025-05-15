@@ -4,7 +4,7 @@ This repo documents my first hands-on experience running vulnerability scans usi
 
 I’ll be walking through:
 - Setting up OpenVAS
-- Running an initial scan on a Windows VM
+- Running an initial scan on a Kali Linux VM
 - Reviewing and interpreting the results
 
 The goal is to practice and demonstrate vulnerability scanning and reporting in a simulated environment.
