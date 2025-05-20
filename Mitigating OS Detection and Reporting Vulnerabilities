@@ -1,0 +1,76 @@
+1. Blocked ICMP Echo requests (ping):
+sudo iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+
+Command Breakdown:
+* Sudo: Runs the command as Superuser, required for changing firewall rules.
+* iptables: This is the firewall utility used to set rules for handling network traffic in Linux.
+* -A INPUT: Append a rule to the INPUT chain. This chain handles incoming traffic to the system.
+* -p icmp: Match packets using the ICMP protocol. ICMP is used for network diagnostics, such as PING.
+* --icmp-type echo-request: Match only ICMP packets of type "echo-request" aka PING requests
+* -j DROP: The "jump" target. This tells iptables to drop matching packets, to silently ignore them without responding.
+
+2. Disabled TCP Timestamps:
+echo 0 | sudo tee /proc/sys/net/ipv4/tcp_timestamps
+
+Command Breakdown:
+* Echo 0: Outputs the character 0 to the terminal. Essentially saying "set the value to 0"
+* | (pipe): Takes the output from the command on the left (Echo 0) and sends it as input on the command to the right (sudo tee...)
+* sudo: Runs the "tee" command with superuser privileges since writing to the system requires admin rights.
+* tee: Reads inputs and outputs it to a file, here it writes "0" as the value to the target file.
+* /proc/sys/net/ipv4/tcp_timestamps: The file controlling whether TCP timestamps are enabled or disabled to the system. Setting this to "0" disables TCP timestamps. 
+
+3. Made TCP Timestamps change persistent:
+sudo nano /etc/sysctl.conf
+
+Command Breakdown: 
+* sudo: Runs with superuser privileges because editing system config files requires admin access. 
+* nano: A simple text editor that runs within the terminal.
+* /etc/sysctl.conf: The system config file for setting kernel parameters that controls various networking and system behaviors, such as disabling TCP timestamps in this scenario.
+
+3.1. Added within nano: 
+net.ipv4.tcp_timestamps = 0
+
+Command breakdown:
+* net.ipv4: This refers to the kernel networking parameters within ipv4, as opposed to ipv6
+* tcp_timestamps: A specific parameter that controls whether tcp timestamps are enabled or disabled. Disabling these helps to reduce the attack surface by preventing attackers from learning system uptime or predicting TCP sequence numbers.
+* = 0: This set the tcp timestamp value to 0, thus disabling it.
+
+3.2. Then applied:
+sudo sysctl -p
+
+Command Breakdown:
+* sudo: Runs the command with superuser privileges because it needs to access system-level config files.
+* sysctl: A utility for examining and monitoring kernel parameters at runtime.
+* -p: Tells sysctl to reload the settings from the default config file(/etc/sysctl.conf). In this case, applying the changes to tcp_timestamps.
+
+4. Blocked common OS fingerprinting probes: 
+sudo iptables -A INPUT -p tcp --tcp-flags FIN,URG,PSH FIN,URG,PSH -j DROP
+sudo iptables -A INPUT -p tcp --tcp-flags ALL NONE -j DROP
+
+Command 1 Breakdown: 
+* sudo: Runs the command as superuser to allow firewall rule changes.
+* iptables: The firewall tool for managing packet filtering rules.
+* -A INPUT: Appends a rule to the INPUT chain, which handles traffic coming into the system. 
+* -p tcp: Specifies the rule is for TCP protocol traffic. 
+* --tcp-flags FIN, URG, PSH FIN, URG, PSH:
+- The first FIN, URG, PSH tells iptables which flags to examine.
+- The second FIN, URG, PSH specifies the exact flags that must be set for the rule to match.
+-Note: This combination is unusual in normal traffic but is often used in stealth scans like Xmas scans (called that because "all the lights are on"). This is used to identify open ports or fingerprint an OS by exploiting how different systems respond to odd flag combos.
+* -j DROP: If a packet matches, it's dropped silently with no reply.
+
+Command 2 Breakdown (excluding repeats from the previous portion):  
+* -p tcp: Applies to TCP traffic. 
+* --tcp-flags ALL NONE
+- ALL means "check all TCP flags"
+- NONE means "match packets where none of those flags are set."
+-These are called null scans (they send TCP packets with no flags at all)
+
+5. Within Windows VM, confirmed hardening with nmap:
+nmap -O <Kali VM IP>
+
+Command Breakdown: 
+* nmap: The network mapper tool used for scanning networks, discovering hosts, and performing security audits.
+* -O: Enables OS detection
+-Nmap sends a series of crafted TCP/UDP and ICMP packets to guess the target's OS.
+- It analyzes responses to guess the OS based on known fingerprinting patterns. 
+*<Kali VM IP>: Target IP address for the nmap scan.
