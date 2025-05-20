@@ -6,6 +6,7 @@ I’ll be walking through:
 - Setting up OpenVAS
 - Running an initial scan on a Kali Linux VM
 - Reviewing and interpreting the results
+- Mitigating any vulnerabilities discovered within the scan
 
 The goal is to practice and demonstrate vulnerability scanning and reporting in a simulated environment.
 
