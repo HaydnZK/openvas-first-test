@@ -1,0 +1,32 @@
+## 1. Blocked outgoing "Time Exceeded" message, which prevents traceroute from receiving hop information:
+sudo iptables -A OUTPUT -p icmp --icmp-type time-exceeded -j DROP 
+
+# Command Breakdown:
+* sudo: Run as root, which is required for iptables changes.
+* iptables: The firewall tool used to manage packet rules.
+* -A OUTPUT: Append this rule to the OUTPUT chain, which affects the packets that are leaving the system.
+* -p icmp: Apply this rule only to ICMP packets, which are used for pings, traceroute, and more.
+* --icmp-type time-exceeded: Targets a specific type of ICMP message ("Time Exceeded").
+* -j DROP: Drop the packet, don't respond or forward it.
+
+## 2. Added extra hardening by blocking incoming ping requests so the system ignores ping scans:
+iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+
+# Command Breakdown:
+* iptables: The firewall tool used to manage and configure packet filtering rules.
+* -A INPUT: Append this rule to the INPUT chain, which handles incoming traffic.
+* -p icmp: This rule only applies to ICMP packets, like ping commands.
+* --icmp-type echo-request: Targets ICMP echo-request messages, used in the ping command.
+* -j DROP: Drop the packet, don't respond or forward it.
+
+## 3. Made the firewall rules persistent across reboots by installing the iptables-persistent package:
+sudo apt install iptables-persistent
+
+# Command Breakdown:
+* sudo: Runs the command with root privileges, which is required to install software.
+* apt: The package manager for Debian-based systems (like Kali), used to install and manage software.
+* install: Tells apt that we're installing a new package.
+* iptables-persistent: This package saves current iptables rules and automatically reloads them at boot, making the firewall rules persistent across reboots.
+
+
+## 4. Saved the IPv4 and IPv6 rules when prompted, ensuring the configuration survives restarts automatically. This was done interactively during the install step when prompted to save the rules.
