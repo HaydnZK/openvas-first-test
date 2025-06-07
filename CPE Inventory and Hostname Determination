@@ -1,0 +1,39 @@
+Disclaimer:
+While none of these results were actual vulnerabilities (especially the traceroute and OS detection findings)
+I used them as an opportunity to harden the system and ensure it follows best security practices wherever possible.
+
+CPE Inventory: Disabled unnecessary services and verified external port visibility
+
+- Disabled `mosquitto` and `postgresql` to reduce local service exposure.
+- Verified with `ss -tulnp` that no TCP/UDP ports are externally visible except expected VPN.
+- Confirmed DHCPv6 client is only listening on link-local address, no public exposure.
+- System now has minimal external footprint — hardened for lab use.
+
+sudo ss -tulnp
+*sudo: Ran the command as the root user for super privileges
+*ss: Socket statistics, a tool similar to netstat used for 
+*-tulnp: 
+t: Shows TCP sockets
+u: Shows UDP sockets
+l: Shows listening sockets only (services waiting for connections)
+n: Shows numeric addresses (don't try to resolves hostnames to make it faster)
+p: Shows the process using the socket (PID and name)
+
+sudo systemctl disable --now mosquitto
+sudo systemctl disable --now postgresql
+*systemctl: The systemd service used for managing system services
+*disable: Prevents the service from starting automatically on boot
+*--now: Stops the service now and disables it from starting later
+*mosquitto and PostgreSQL: Programs that weren't being used and were shut off to close the ports. 
+
+sudo ss -tulnp | grep -v 127.0.0.1 | grep -v ::1
+*grep -v 127.0.0.1 | grep -v ::1: Filters out any sockets only listening on localhost (IPv4 and IPv6 loopback),
+showing only those exposed to external networks
+
+Hostname Determination Reporting: Confirmed hostname via Reverse-DNS
+
+*The scan reported the hostname kali.lan for the IP ***.***.***.*** using Reverse-DNS lookup.
+*This is expected behavior for a local VM with a configured hostname.
+*No vulnerabilities were identified related to hostname disclosure.
+*No changes were required; this information is standard network behavior.
+*Ensured that the hostname does not leak sensitive info and is consistent with internal naming conventions.
